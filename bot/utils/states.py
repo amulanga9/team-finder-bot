@@ -9,13 +9,15 @@ class TeamRegistration(StatesGroup):
     waiting_for_skills_selection = State()
 
 
-class ParticipantRegistration(StatesGroup):
-    """Состояния регистрации участника"""
-    # TODO: будет реализовано позже
-    pass
-
-
 class CofounderRegistration(StatesGroup):
     """Состояния регистрации со-фаундера"""
-    # TODO: будет реализовано позже
-    pass
+    waiting_for_name = State()
+    waiting_for_skill = State()
+    waiting_for_idea_what = State()
+    waiting_for_idea_who = State()
+
+
+class SeekerRegistration(StatesGroup):
+    """Состояния регистрации соискателя"""
+    waiting_for_name = State()
+    waiting_for_skills = State()

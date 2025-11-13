@@ -1,4 +1,4 @@
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import User, Team, Invitation, UserType, InvitationStatus, TeamStatus
 from typing import Optional, List
@@ -59,6 +59,14 @@ async def update_user_last_active(session: AsyncSession, user_id: int) -> None:
         .values(last_active=datetime.utcnow())
     )
     await session.commit()
+
+
+async def count_users(session: AsyncSession) -> int:
+    """Подсчитать общее количество пользователей"""
+    result = await session.execute(
+        select(func.count()).select_from(User)
+    )
+    return result.scalar()
 
 
 # ===== TEAM CRUD =====

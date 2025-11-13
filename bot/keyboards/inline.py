@@ -48,6 +48,52 @@ def get_skills_keyboard(selected_skills: list = None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
+def get_single_skill_keyboard() -> InlineKeyboardMarkup:
+    """
+    Клавиатура выбора одного навыка (для co-founder)
+    """
+    keyboard = []
+
+    # Добавляем кнопки навыков
+    for skill_key, skill_info in SKILLS_DESCRIPTIONS.items():
+        skill_name = skill_info.get("name", skill_key)
+        keyboard.append([InlineKeyboardButton(
+            text=skill_name,
+            callback_data=f"single_skill_{skill_key}"
+        )])
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_limited_skills_keyboard(selected_skills: list = None, max_skills: int = 3) -> InlineKeyboardMarkup:
+    """
+    Клавиатура выбора ограниченного количества навыков (для seeker)
+
+    Args:
+        selected_skills: список уже выбранных навыков
+        max_skills: максимальное количество навыков (по умолчанию 3)
+    """
+    if selected_skills is None:
+        selected_skills = []
+
+    keyboard = []
+
+    # Добавляем кнопки навыков
+    for skill_key in SKILLS_DESCRIPTIONS.keys():
+        is_selected = skill_key in selected_skills
+        button_text = get_skill_button_text(skill_key, is_selected)
+        keyboard.append([InlineKeyboardButton(
+            text=button_text,
+            callback_data=f"limited_skill_{skill_key}"
+        )])
+
+    # Показываем счетчик выбранных навыков
+    done_text = f"{BUTTON_DONE} ({len(selected_skills)}/{max_skills})"
+    keyboard.append([InlineKeyboardButton(text=done_text, callback_data="limited_skills_done")])
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
 def get_final_actions_keyboard() -> InlineKeyboardMarkup:
     """Клавиатура с финальными действиями после регистрации"""
     keyboard = [
