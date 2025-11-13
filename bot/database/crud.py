@@ -1,8 +1,8 @@
-from sqlalchemy import select, update, delete, func
+from sqlalchemy import select, update, delete, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import User, Team, Invitation, UserType, InvitationStatus, TeamStatus
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 # ===== USER CRUD =====
@@ -205,3 +205,94 @@ async def mark_invitation_viewed(
         .values(viewed_at=datetime.utcnow())
     )
     await session.commit()
+
+
+# ===== SEARCH FUNCTIONS =====
+
+async def find_users_by_skills(
+    session: AsyncSession,
+    needed_skills: str,
+    exclude_user_id: Optional[int] = None
+) -> List[User]:
+    """
+    Найти пользователей по навыкам
+    
+    Args:
+        session: сессия БД
+        needed_skills: строка с нужными навыками (например: "Mobile (Flutter), Design (Figma)")
+        exclude_user_id: ID пользователя, которого нужно исключить из поиска
+    
+    Returns:
+        Список пользователей, отсортированный по активности
+    """
+    # Разбираем навыки
+    skills_list = [skill.strip() for skill in needed_skills.split(',')]
+    
+    # Строим запрос для поиска пользователей с нужными навыками
+    query = select(User).where(User.user_type == UserType.PARTICIPANT)
+    
+    if exclude_user_id:
+        query = query.where(User.id != exclude_user_id)
+    
+    # Ищем по primary_skill или additional_skills
+    skill_conditions = []
+    for skill in skills_list:
+        skill_conditions.append(User.primary_skill.ilike(f"%{skill}%"))
+        skill_conditions.append(User.additional_skills.ilike(f"%{skill}%"))
+    
+    query = query.where(or_(*skill_conditions))
+    
+    # Сортируем по активности (last_active от новых к старым)
+    query = query.order_by(User.last_active.desc())
+    
+    result = await session.execute(query)
+    return list(result.scalars().all())
+
+
+async def count_invitations_today(
+    session: AsyncSession,
+    from_user_id: int
+) -> int:
+    """
+    Подсчитать количество приглашений, отправленных сегодня
+    
+    Args:
+        session: сессия БД
+        from_user_id: ID пользователя-отправителя
+    
+    Returns:
+        Количество приглашений за сегодня
+    """
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    result = await session.execute(
+        select(func.count())
+        .select_from(Invitation)
+        .where(
+            and_(
+                Invitation.from_user_id == from_user_id,
+                Invitation.created_at >= today_start
+            )
+        )
+    )
+    return result.scalar()
+
+
+async def check_invitation_limit(
+    session: AsyncSession,
+    from_user_id: int,
+    max_per_day: int = 5
+) -> bool:
+    """
+    Проверить, не превышен ли лимит приглашений
+    
+    Args:
+        session: сессия БД
+        from_user_id: ID пользователя-отправителя
+        max_per_day: максимальное количество приглашений в день
+    
+    Returns:
+        True если лимит не превышен, False если превышен
+    """
+    count = await count_invitations_today(session, from_user_id)
+    return count < max_per_day

@@ -182,3 +182,95 @@ def get_skill_full_text(skill_key: str) -> str:
 def format_selected_skills(selected_skills: list) -> str:
     """Форматировать выбранные навыки для сохранения"""
     return ", ".join([SKILLS_DESCRIPTIONS.get(skill, {}).get("name", skill) for skill in selected_skills])
+
+
+# === ПОИСК ===
+
+SEARCH_RESULTS_HEADER = """Нашел {count} человек с нужными навыками ({skills}).
+━━━━━━━━━━━"""
+
+SEARCH_NO_RESULTS = """Пока нет подходящих соискателей 😔
+
+НО мы уведомим тебя когда появятся!"""
+
+SEARCH_USER_CARD = """👤 {name} {recommended}
+🛠 {skills}
+📅 Был в сети: {last_active}"""
+
+USER_DETAIL = """👤 <b>{name}</b>
+
+🛠 <b>Навыки:</b> {skills}
+
+💡 <b>Идея:</b>
+{idea}
+
+📅 <b>Активность:</b> {last_active}
+📊 <b>Статус:</b> {activity_status}"""
+
+INVITATION_SENT = """✅ Приглашение отправлено!
+
+{name} получит уведомление."""
+
+INVITATION_LIMIT_REACHED = """⚠️ Достигнут лимит приглашений!
+
+Вы можете отправлять максимум {limit} приглашений в день.
+Сегодня отправлено: {count}
+
+Попробуйте завтра."""
+
+# === ПРИГЛАШЕНИЯ ===
+
+INVITATION_RECEIVED = """👥 Команда <b>{team_name}</b> приглашает тебя!
+
+💡 <b>Идея:</b> {idea}
+🔍 <b>Ищут:</b> {needed_skills}"""
+
+INVITATION_ACCEPTED = """✅ Отлично! Вы приняли приглашение.
+
+Контакт лидера команды: @{leader_username}"""
+
+INVITATION_REJECTED = """❌ Приглашение отклонено."""
+
+# === КНОПКИ ПОИСКА ===
+
+BUTTON_INVITE = "✅ Пригласить"
+BUTTON_DETAIL = "👁 Подробнее"
+BUTTON_ACCEPT_INVITE = "✅ Интересно!"
+BUTTON_MEET = "📅 Встретиться"
+BUTTON_REJECT_INVITE = "❌ Не сейчас"
+BUTTON_CHANGE_SKILLS = "✏️ Изменить нужные навыки"
+BUTTON_OK_WAIT = "⏰ Ок, подожду"
+
+
+def format_user_activity(last_active: datetime) -> str:
+    """Форматировать активность пользователя"""
+    now = datetime.utcnow()
+    delta = now - last_active
+    
+    if delta.days == 0:
+        return "сегодня 🟢"
+    elif delta.days <= 7:
+        return f"{delta.days} дн. назад 🟡"
+    else:
+        return f"{delta.days} дн. назад 🔴"
+
+
+def get_activity_status(last_active: datetime) -> str:
+    """Получить статус активности"""
+    now = datetime.utcnow()
+    delta = now - last_active
+    
+    if delta.days == 0:
+        return "Активен"
+    elif delta.days <= 7:
+        return "Недавно был"
+    else:
+        return "Давно не заходил"
+
+
+def is_recommended(last_active: datetime) -> str:
+    """Проверить, рекомендуется ли пользователь"""
+    now = datetime.utcnow()
+    delta = now - last_active
+    
+    return "⭐ Рекомендуем!" if delta.days == 0 else ""
