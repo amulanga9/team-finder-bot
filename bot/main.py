@@ -4,6 +4,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from config import settings
 from database.db import create_tables
+from handlers.start import router as start_router
 
 
 # Настройка логирования
@@ -31,10 +32,10 @@ async def main():
         logger.error(f"Ошибка при создании таблиц: {e}")
         return
 
-    # TODO: Регистрация роутеров (handlers)
-    # dp.include_router(start_router)
-    # dp.include_router(profile_router)
-    # dp.include_router(search_router)
+    # Регистрация роутеров (handlers)
+    dp.include_router(start_router)
+    # dp.include_router(profile_router)  # TODO
+    # dp.include_router(search_router)   # TODO
 
     logger.info("Бот успешно запущен")
 

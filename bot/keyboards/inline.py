@@ -1,0 +1,57 @@
+"""Инлайн клавиатуры бота"""
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from utils.texts import SKILLS_DESCRIPTIONS, get_skill_button_text, BUTTON_DONE, BUTTON_SKIP, BUTTON_SEARCH_NOW, BUTTON_WAIT
+
+
+def get_user_type_keyboard() -> InlineKeyboardMarkup:
+    """Клавиатура выбора типа пользователя"""
+    keyboard = [
+        [InlineKeyboardButton(text="🎯 У нас команда (2+ человека)", callback_data="type_team")],
+        [InlineKeyboardButton(text="💡 У меня идея, ищу со-фаундера", callback_data="type_cofounder")],
+        [InlineKeyboardButton(text="👤 Просто хочу помочь команде", callback_data="type_participant")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_skip_keyboard() -> InlineKeyboardMarkup:
+    """Клавиатура с кнопкой пропустить"""
+    keyboard = [
+        [InlineKeyboardButton(text=BUTTON_SKIP, callback_data="skip")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_skills_keyboard(selected_skills: list = None) -> InlineKeyboardMarkup:
+    """
+    Клавиатура выбора навыков с множественным выбором
+
+    Args:
+        selected_skills: список уже выбранных навыков
+    """
+    if selected_skills is None:
+        selected_skills = []
+
+    keyboard = []
+
+    # Добавляем кнопки навыков
+    for skill_key in SKILLS_DESCRIPTIONS.keys():
+        is_selected = skill_key in selected_skills
+        button_text = get_skill_button_text(skill_key, is_selected)
+        keyboard.append([InlineKeyboardButton(
+            text=button_text,
+            callback_data=f"skill_{skill_key}"
+        )])
+
+    # Добавляем кнопку "Готово"
+    keyboard.append([InlineKeyboardButton(text=BUTTON_DONE, callback_data="skills_done")])
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_final_actions_keyboard() -> InlineKeyboardMarkup:
+    """Клавиатура с финальными действиями после регистрации"""
+    keyboard = [
+        [InlineKeyboardButton(text=BUTTON_SEARCH_NOW, callback_data="search_now")],
+        [InlineKeyboardButton(text=BUTTON_WAIT, callback_data="wait")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
