@@ -9,6 +9,7 @@ from handlers.search import router as search_router
 from handlers.invitations import router as invitations_router
 from handlers.profile import router as profile_router
 from handlers.team import router as team_router
+from handlers.commands import router as commands_router
 
 
 # Настройка логирования
@@ -37,6 +38,7 @@ async def main():
         return
 
     # Регистрация роутеров (handlers)
+    dp.include_router(commands_router)  # /help, /cancel первыми
     dp.include_router(start_router)
     dp.include_router(search_router)
     dp.include_router(invitations_router)
