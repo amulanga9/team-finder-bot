@@ -341,3 +341,127 @@ MEETING_CHECKLIST = """📋 Чеклист для первой встречи:
 4. Договоритесь о пробном периоде (1-2 недели)
 
 💡 Главное - понять, подходите ли вы друг другу!"""
+
+
+# === ПРОФИЛЬ И СТАТИСТИКА ===
+
+# Профиль соискателя (PARTICIPANT)
+PROFILE_PARTICIPANT = """👤 {name}
+🛠 {skills}
+📅 Зарегистрирован: {days} дн. назад
+{status_line}"""
+
+SENT_REQUESTS_SECTION = """
+<b>Отправленные запросы:</b>
+{requests}"""
+
+RECEIVED_INVITATIONS_SECTION = """
+<b>Приглашения от команд:</b>
+{invitations}"""
+
+NO_SENT_REQUESTS = "Пока нет отправленных запросов"
+NO_RECEIVED_INVITATIONS = "Пока нет приглашений"
+
+# Профиль со-фаундера (COFOUNDER)
+PROFILE_COFOUNDER = """👤 {name}
+🛠 {skill}
+💡 Идея: {idea}
+📅 Зарегистрирован: {days} дн. назад"""
+
+COFOUNDER_REQUESTS_SECTION = """
+<b>Твои запросы:</b>
+{requests}"""
+
+COFOUNDER_TIP = """
+💡 Совет: {tip}"""
+
+# Профиль команды (TEAM)
+PROFILE_TEAM = """👤 {name}
+🎯 Команда: <b>{team_name}</b>
+📅 Зарегистрирован: {days} дн. назад
+{status_line}"""
+
+TEAM_STATS = """Ваша команда: <b>{team_name}</b>
+
+📊 Статистика:
+Просмотрели: {views} человек
+Подходящих: {matching} человек"""
+
+TEAM_INVITATIONS_SECTION = """
+<b>Приглашения:</b>
+{invitations}"""
+
+TEAM_REQUESTS_SECTION = """
+<b>Запросы от соискателей:</b>
+{requests}"""
+
+TEAM_TIP = """
+💡 Совет: {tip}"""
+
+NO_TEAM_INVITATIONS = "Пока нет отправленных приглашений"
+NO_TEAM_REQUESTS = "Пока нет запросов"
+
+# Кнопки для профиля
+BUTTON_EDIT_PROFILE = "✏️ Редактировать"
+BUTTON_SEARCH_TEAMS = "🔍 Искать команды"
+BUTTON_SEARCH = "🔍 Искать"
+BUTTON_EDIT = "✏️ Профиль"
+
+# Статусы запросов и приглашений
+def format_invitation_status(invitation, user_name: str = None) -> str:
+    """Форматировать статус приглашения для отображения"""
+    from database.models import InvitationStatus
+    from datetime import datetime
+
+    if invitation.status == InvitationStatus.ACCEPTED:
+        username = f"@{user_name}" if user_name else "контакт получен"
+        return f"✅ Приняли! Контакт: {username}"
+    elif invitation.status == InvitationStatus.REJECTED:
+        return f"❌ Отказал"
+    elif invitation.viewed_at:
+        days = (datetime.utcnow() - invitation.viewed_at).days
+        return f"👁 Прочитал, думает ({days} дн.)" if days > 0 else "👁 Прочитал, думает"
+    else:
+        days = (datetime.utcnow() - invitation.created_at).days
+        return f"⏳ Ждет ответа ({days} дн.)" if days > 0 else "⏳ Ждет ответа"
+
+
+def format_request_status(invitation, team_name: str = None) -> str:
+    """Форматировать статус запроса для отображения"""
+    from database.models import InvitationStatus
+    from datetime import datetime
+
+    if invitation.status == InvitationStatus.ACCEPTED:
+        return f"✅ Принял! @{team_name}" if team_name else "✅ Принял!"
+    elif invitation.status == InvitationStatus.REJECTED:
+        return f"❌ Отказали"
+    elif invitation.viewed_at:
+        days = (datetime.utcnow() - invitation.viewed_at).days
+        time_str = f" ({days} дн.)" if days > 0 else ""
+        return f"⏳ Думают{time_str}"
+    else:
+        days = (datetime.utcnow() - invitation.created_at).days
+        hours = int((datetime.utcnow() - invitation.created_at).total_seconds() / 3600)
+        if days > 0:
+            return f"⏳ Ждет ({days} дн.)"
+        elif hours > 0:
+            return f"⏳ Ждет ({hours} ч)"
+        else:
+            return f"⏳ Ждет"
+
+
+def get_profile_tip(pending_count: int, user_type: str = "cofounder") -> str:
+    """Получить совет для профиля"""
+    if pending_count == 0:
+        return None
+
+    if user_type == "cofounder":
+        if pending_count == 1:
+            return "У тебя есть неотвеченный запрос. Попробуй улучшить описание идеи?"
+        else:
+            return f"У тебя {pending_count} неотвеченных запросов. Попробуй улучшить описание идеи?"
+    else:  # team
+        if pending_count == 1:
+            return "Есть запрос который ждет - не заставляй ждать!"
+        else:
+            return f"{pending_count} запросов ждут ответа - не заставляй ждать!"

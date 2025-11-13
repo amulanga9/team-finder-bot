@@ -285,14 +285,109 @@ async def check_invitation_limit(
 ) -> bool:
     """
     Проверить, не превышен ли лимит приглашений
-    
+
     Args:
         session: сессия БД
         from_user_id: ID пользователя-отправителя
         max_per_day: максимальное количество приглашений в день
-    
+
     Returns:
         True если лимит не превышен, False если превышен
     """
     count = await count_invitations_today(session, from_user_id)
     return count < max_per_day
+
+
+# ===== STATISTICS FUNCTIONS =====
+
+async def get_user_stats(session: AsyncSession, user_id: int) -> dict:
+    """
+    Получить статистику пользователя
+
+    Returns:
+        dict с полями:
+        - user: объект User
+        - days_registered: количество дней с регистрации
+        - sent_invitations: список отправленных приглашений
+        - received_invitations: список полученных приглашений
+    """
+    # Получаем пользователя
+    user = await get_user_by_id(session, user_id)
+    if not user:
+        return None
+
+    # Считаем дни с регистрации
+    days_registered = (datetime.utcnow() - user.created_at).days
+
+    # Получаем отправленные приглашения
+    sent_invitations = await get_sent_invitations(session, user_id)
+
+    # Получаем полученные приглашения
+    received_invitations = await get_received_invitations(session, user_id)
+
+    return {
+        'user': user,
+        'days_registered': days_registered,
+        'sent_invitations': sent_invitations,
+        'received_invitations': received_invitations,
+    }
+
+
+async def get_team_stats(session: AsyncSession, team_id: int) -> dict:
+    """
+    Получить статистику команды
+
+    Returns:
+        dict с полями:
+        - team: объект Team
+        - sent_invitations: приглашения от команды
+        - received_requests: запросы к команде
+        - matching_users_count: количество подходящих пользователей
+    """
+    # Получаем команду
+    team = await get_team_by_id(session, team_id)
+    if not team:
+        return None
+
+    # Получаем приглашения от команды
+    result = await session.execute(
+        select(Invitation).where(Invitation.from_team_id == team_id)
+    )
+    sent_invitations = list(result.scalars().all())
+
+    # Получаем запросы к команде (приглашения к лидеру без from_team_id)
+    result = await session.execute(
+        select(Invitation).where(
+            and_(
+                Invitation.to_user_id == team.leader_id,
+                Invitation.from_team_id == None
+            )
+        )
+    )
+    received_requests = list(result.scalars().all())
+
+    # Считаем подходящих пользователей по навыкам
+    matching_users_count = 0
+    if team.needed_skills:
+        matching_users = await find_users_by_skills(session, team.needed_skills)
+        matching_users_count = len(matching_users)
+
+    return {
+        'team': team,
+        'sent_invitations': sent_invitations,
+        'received_requests': received_requests,
+        'matching_users_count': matching_users_count,
+    }
+
+
+async def count_profile_views(session: AsyncSession, user_id: int) -> int:
+    """
+    Подсчитать просмотры профиля
+    Пока возвращаем количество полученных приглашений как прокси для просмотров
+    """
+    result = await session.execute(
+        select(func.count())
+        .select_from(Invitation)
+        .where(Invitation.to_user_id == user_id)
+    )
+    return result.scalar()

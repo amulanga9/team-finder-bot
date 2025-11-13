@@ -7,6 +7,8 @@ from database.db import create_tables
 from handlers.start import router as start_router
 from handlers.search import router as search_router
 from handlers.invitations import router as invitations_router
+from handlers.profile import router as profile_router
+from handlers.team import router as team_router
 
 
 # Настройка логирования
@@ -38,7 +40,8 @@ async def main():
     dp.include_router(start_router)
     dp.include_router(search_router)
     dp.include_router(invitations_router)
-    # dp.include_router(profile_router)  # TODO
+    dp.include_router(profile_router)
+    dp.include_router(team_router)
 
     logger.info("Бот успешно запущен")
 

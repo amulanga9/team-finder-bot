@@ -1,6 +1,10 @@
 """Инлайн клавиатуры бота"""
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from utils.texts import SKILLS_DESCRIPTIONS, get_skill_button_text, BUTTON_DONE, BUTTON_SKIP, BUTTON_SEARCH_NOW, BUTTON_WAIT
+from utils.texts import (
+    SKILLS_DESCRIPTIONS, get_skill_button_text, BUTTON_DONE, BUTTON_SKIP,
+    BUTTON_SEARCH_NOW, BUTTON_WAIT, BUTTON_EDIT_PROFILE, BUTTON_SEARCH_TEAMS,
+    BUTTON_SEARCH, BUTTON_EDIT, BUTTON_ACCEPT_INVITE, BUTTON_REJECT_INVITE
+)
 
 
 def get_user_type_keyboard() -> InlineKeyboardMarkup:
@@ -99,5 +103,49 @@ def get_final_actions_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton(text=BUTTON_SEARCH_NOW, callback_data="search_now")],
         [InlineKeyboardButton(text=BUTTON_WAIT, callback_data="wait")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+# === КЛАВИАТУРЫ ДЛЯ ПРОФИЛЯ ===
+
+def get_profile_keyboard(user_type: str = "participant") -> InlineKeyboardMarkup:
+    """
+    Клавиатура для профиля пользователя
+
+    Args:
+        user_type: тип пользователя (participant, cofounder, team)
+    """
+    if user_type == "participant":
+        keyboard = [
+            [InlineKeyboardButton(text=BUTTON_EDIT_PROFILE, callback_data="edit_profile")],
+            [InlineKeyboardButton(text=BUTTON_SEARCH_TEAMS, callback_data="search_teams")]
+        ]
+    elif user_type == "cofounder":
+        keyboard = [
+            [InlineKeyboardButton(text=BUTTON_EDIT_PROFILE, callback_data="edit_profile")],
+            [InlineKeyboardButton(text=BUTTON_SEARCH, callback_data="search_now")]
+        ]
+    else:  # team
+        keyboard = [
+            [InlineKeyboardButton(text=BUTTON_EDIT, callback_data="edit_profile")],
+            [InlineKeyboardButton(text=BUTTON_SEARCH, callback_data="search_now")]
+        ]
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_invitation_response_keyboard(invitation_id: int) -> InlineKeyboardMarkup:
+    """
+    Клавиатура для ответа на приглашение в профиле
+
+    Args:
+        invitation_id: ID приглашения
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton(text=BUTTON_ACCEPT_INVITE, callback_data=f"accept_invite_{invitation_id}"),
+            InlineKeyboardButton(text=BUTTON_REJECT_INVITE, callback_data=f"reject_invite_{invitation_id}")
+        ]
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
