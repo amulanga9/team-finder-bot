@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: teammates_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-teammates_bot}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bot_network
+
+  # Telegram Bot
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: teammates_bot
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Telegram
+      BOT_TOKEN: ${BOT_TOKEN}
+
+      # Database
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-teammates_bot}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # Application
+      DEBUG: ${DEBUG:-False}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_TO_FILE: ${LOG_TO_FILE:-True}
+      LOG_FILE_PATH: logs/bot.log
+
+      # Rate Limiting
+      RATE_LIMIT_DAILY_INVITATIONS: ${RATE_LIMIT_DAILY_INVITATIONS:-5}
+      RATE_LIMIT_REQUESTS_PER_MINUTE: ${RATE_LIMIT_REQUESTS_PER_MINUTE:-20}
+
+      # Cleanup
+      CLEANUP_EXPIRED_INVITATIONS_HOURS: ${CLEANUP_EXPIRED_INVITATIONS_HOURS:-72}
+      CLEANUP_INACTIVE_USERS_DAYS: ${CLEANUP_INACTIVE_USERS_DAYS:-30}
+      CLEANUP_INTERVAL_MINUTES: ${CLEANUP_INTERVAL_MINUTES:-60}
+    volumes:
+      - ./bot/logs:/app/logs
+    networks:
+      - bot_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  bot_network:
+    driver: bridge

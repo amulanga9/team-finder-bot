@@ -1,6 +1,19 @@
 # 🚀 Telegram Bot для поиска teammates
 
-Телеграм-бот для поиска со-основателей и команд в стартап-акселераторе Launch Lab.
+**Production-ready** телеграм-бот для поиска со-основателей и команд в стартап-акселераторе Launch Lab.
+
+## 🎯 Production Features
+
+- ✅ **Layered Architecture** - Services, Schemas, Middlewares
+- ✅ **Automatic Session Cleanup** - Context managers для БД
+- ✅ **Graceful Shutdown** - Signal handlers (SIGTERM, SIGINT)
+- ✅ **Rate Limiting** - Защита от спама (20 req/min)
+- ✅ **Background Tasks** - Автоматическая очистка expired invitations и inactive users
+- ✅ **Database Optimization** - Indexes, constraints, CASCADE deletes
+- ✅ **Pydantic Settings** - Валидация конфигурации
+- ✅ **Docker Ready** - Production Dockerfile + docker-compose
+- ✅ **Logging** - Консоль + файлы с ротацией
+- ✅ **Health Checks** - Для Docker и мониторинга
 
 ## ✨ Возможности
 
@@ -27,9 +40,12 @@
 - **Python 3.11+**
 - **aiogram 3.4.1** - Telegram Bot framework
 - **PostgreSQL** - База данных
-- **SQLAlchemy 2.0.25** - ORM
+- **SQLAlchemy 2.0.25** - ORM с оптимизацией
 - **asyncpg 0.29.0** - Async PostgreSQL driver
-- **Alembic 1.13.1** - Database migrations
+- **Pydantic 2.5.0** - Валидация и Settings
+- **cachetools 5.3.2** - TTL cache для rate limiting
+- **Docker** - Containerization
+- **Alembic 1.13.1** - Database migrations (опционально)
 
 ## 📋 Требования
 
@@ -37,7 +53,38 @@
 - PostgreSQL 12 или выше
 - Telegram Bot Token (от @BotFather)
 
-## 🚀 Установка
+## 🚀 Быстрый старт (Docker - РЕКОМЕНДУЕТСЯ)
+
+### 1. Клонировать репозиторий
+
+```bash
+git clone https://github.com/yourusername/exams_21.git
+cd exams_21
+```
+
+### 2. Настроить переменные окружения
+
+```bash
+cp bot/.env.example bot/.env
+nano bot/.env  # Добавьте BOT_TOKEN и DB_PASSWORD
+```
+
+### 3. Запустить через Docker
+
+```bash
+docker-compose up -d
+```
+
+Готово! Бот запущен и работает в фоновом режиме.
+
+Проверить логи:
+```bash
+docker-compose logs -f bot
+```
+
+---
+
+## 📦 Установка без Docker (Manual)
 
 ### 1. Клонировать репозиторий
 
@@ -117,16 +164,23 @@ INFO - Бот успешно запущен
 - `/cancel` - Отменить текущее действие
 - `/help` - Показать справку
 
-## 🏗 Структура проекта
+## 🏗 Структура проекта (Production-Ready)
 
 ```
 exams_21/
 ├── bot/
 │   ├── database/
 │   │   ├── __init__.py
-│   │   ├── db.py              # Подключение к БД
-│   │   ├── models.py          # SQLAlchemy модели
+│   │   ├── db.py              # Подключение к БД + context managers
+│   │   ├── models.py          # SQLAlchemy модели (с indexes)
 │   │   └── crud.py            # CRUD операции
+│   ├── services/              # 🆕 Бизнес-логика (будущее)
+│   │   └── __init__.py
+│   ├── schemas/               # 🆕 Pydantic схемы (будущее)
+│   │   └── __init__.py
+│   ├── middlewares/           # 🆕 Middleware компоненты
+│   │   ├── __init__.py
+│   │   └── throttling.py      # Rate limiting
 │   ├── handlers/
 │   │   ├── __init__.py
 │   │   ├── start.py           # Регистрация
@@ -143,13 +197,17 @@ exams_21/
 │   │   ├── __init__.py
 │   │   ├── texts.py           # Тексты сообщений
 │   │   └── states.py          # FSM состояния
-│   ├── config.py              # Конфигурация
-│   ├── main.py                # Точка входа
+│   ├── config.py              # 🆕 Pydantic Settings (валидация)
+│   ├── tasks.py               # 🆕 Background tasks (cleanup)
+│   ├── main.py                # 🆕 Точка входа (с graceful shutdown)
 │   ├── requirements.txt       # Зависимости
-│   └── .env.example           # Пример .env
+│   └── .env.example           # 🆕 Расширенный пример .env
+├── Dockerfile                 # 🆕 Production Dockerfile
+├── docker-compose.yml         # 🆕 Docker Compose конфигурация
+├── .dockerignore              # 🆕 Docker ignore rules
 ├── README.md
 ├── PROMPTS.md                 # История промптов
-└── DEPLOYMENT.md              # Инструкции по деплою
+└── DEPLOYMENT.md              # 🆕 Обновленные инструкции
 ```
 
 ## 🔧 Разработка

@@ -147,89 +147,118 @@ sudo journalctl -u teammates-bot -f
 
 ---
 
-## Docker
+## Docker (РЕКОМЕНДУЕТСЯ для production)
 
-### 1. Создать Dockerfile
+Проект уже содержит готовые `Dockerfile` и `docker-compose.yml`.
 
-```dockerfile
-# /opt/exams_21/Dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Установить зависимости системы
-RUN apt-get update && apt-get install -y \
-    postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
-
-# Копировать requirements
-COPY bot/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Копировать код
-COPY bot/ .
-
-# Запустить бота
-CMD ["python", "main.py"]
-```
-
-### 2. Создать docker-compose.yml
-
-```yaml
-# /opt/exams_21/docker-compose.yml
-version: '3.8'
-
-services:
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: teammates_db
-      POSTGRES_USER: teammates_user
-      POSTGRES_PASSWORD: your_secure_password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U teammates_user -d teammates_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  bot:
-    build: .
-    environment:
-      BOT_TOKEN: ${BOT_TOKEN}
-      DATABASE_URL: postgresql+asyncpg://teammates_user:your_secure_password@db:5432/teammates_db
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
-
-volumes:
-  postgres_data:
-```
-
-### 3. Создать .env
+### 1. Клонировать репозиторий
 
 ```bash
-echo "BOT_TOKEN=your_real_bot_token" > .env
+git clone https://github.com/yourusername/exams_21.git
+cd exams_21
 ```
 
-### 4. Запустить
+### 2. Создать .env файл
+
+```bash
+cp bot/.env.example bot/.env
+nano bot/.env
+```
+
+Минимальная конфигурация:
+```env
+BOT_TOKEN=your_real_bot_token
+DB_PASSWORD=your_secure_password
+```
+
+Полная конфигурация (опционально):
+```env
+# Telegram
+BOT_TOKEN=your_real_bot_token
+
+# Database
+DB_HOST=db
+DB_PORT=5432
+DB_NAME=teammates_bot
+DB_USER=postgres
+DB_PASSWORD=your_secure_password
+
+# Application
+DEBUG=False
+LOG_LEVEL=INFO
+LOG_TO_FILE=True
+
+# Rate Limiting
+RATE_LIMIT_DAILY_INVITATIONS=5
+RATE_LIMIT_REQUESTS_PER_MINUTE=20
+
+# Cleanup
+CLEANUP_EXPIRED_INVITATIONS_HOURS=72
+CLEANUP_INACTIVE_USERS_DAYS=30
+CLEANUP_INTERVAL_MINUTES=60
+```
+
+### 3. Запустить
 
 ```bash
 docker-compose up -d
 ```
 
+Это запустит:
+- PostgreSQL базу данных (с автоматическими health checks)
+- Telegram бота (с автоматическим restart)
+- Фоновые задачи очистки
+- Rate limiting middleware
+- Graceful shutdown handlers
+
+### 4. Проверить статус
+
+```bash
+docker-compose ps
+```
+
 ### 5. Просмотр логов
 
 ```bash
+# Все сервисы
+docker-compose logs -f
+
+# Только бот
 docker-compose logs -f bot
+
+# Только база данных
+docker-compose logs -f db
 ```
 
-### 6. Остановить
+### 6. Обновление кода
 
 ```bash
+git pull
 docker-compose down
+docker-compose up -d --build
+```
+
+### 7. Остановить
+
+```bash
+# Остановить без удаления данных
+docker-compose stop
+
+# Остановить и удалить контейнеры (данные БД сохраняются)
+docker-compose down
+
+# Удалить ВСЁ включая данные БД (ОСТОРОЖНО!)
+docker-compose down -v
+```
+
+### 8. Бэкап базы данных
+
+```bash
+# Создать бэкап
+docker-compose exec db pg_dump -U postgres teammates_bot > backup_$(date +%Y%m%d).sql
+
+# Восстановить из бэкапа
+docker-compose exec -T db psql -U postgres teammates_bot < backup_20250101.sql
 ```
 
 ---
