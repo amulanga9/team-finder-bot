@@ -343,7 +343,20 @@ async def finish_cofounder_registration(message: Message, user_data, state: FSMC
     try:
         # Сохраняем в БД
         async with get_db() as session:
-            # Создаем пользователя
+            # Проверяем, существует ли пользователь
+            user = await crud.get_user_by_telegram_id(session, user_data.id)
+
+            if user:
+                # Пользователь уже зарегистрирован
+                await message.answer(
+                    f"⚠️ Вы уже зарегистрированы!\n\n"
+                    f"Используйте /profile для просмотра профиля или /search для поиска.",
+                    parse_mode="HTML"
+                )
+                await state.clear()
+                return
+
+            # Создаем нового пользователя
             user = await crud.create_user(
                 session=session,
                 telegram_id=user_data.id,
@@ -461,7 +474,21 @@ async def finish_seeker_skills_selection(callback: CallbackQuery, state: FSMCont
     try:
         # Сохраняем в БД
         async with get_db() as session:
-            # Создаем пользователя
+            # Проверяем, существует ли пользователь
+            user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
+
+            if user:
+                # Пользователь уже зарегистрирован
+                await callback.message.edit_text(
+                    f"⚠️ Вы уже зарегистрированы!\n\n"
+                    f"Используйте /profile для просмотра профиля или /search для поиска.",
+                    parse_mode="HTML"
+                )
+                await state.clear()
+                await callback.answer("Вы уже зарегистрированы!")
+                return
+
+            # Создаем нового пользователя
             user = await crud.create_user(
                 session=session,
                 telegram_id=callback.from_user.id,
