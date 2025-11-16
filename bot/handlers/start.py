@@ -6,7 +6,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.db import async_session_maker
+from database.db import AsyncSessionLocal
 from database import crud
 from database.models import UserType
 from utils.states import TeamRegistration, CofounderRegistration, SeekerRegistration
@@ -167,7 +167,7 @@ async def finish_team_skills_selection(callback: CallbackQuery, state: FSMContex
 
     try:
         # Сохраняем в БД
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             # Проверяем, существует ли пользователь
             user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
 

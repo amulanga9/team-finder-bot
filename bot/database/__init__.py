@@ -1,6 +1,6 @@
 """Модуль работы с базой данных"""
 from database.models import User, Team, Invitation, UserType, InvitationStatus, TeamStatus
-from database.db import create_tables, drop_tables, get_session
+from database.db import create_tables, drop_tables, get_db
 
 __all__ = [
     "User",

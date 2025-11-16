@@ -4,7 +4,7 @@ from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
-from database.db import async_session_maker
+from database.db import AsyncSessionLocal
 from database import crud
 from database.models import InvitationStatus
 from utils.texts import (
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 async def cmd_invitations(message: Message):
     """Команда /invitations - показать приглашения"""
     try:
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             # Получаем пользователя
             user = await crud.get_user_by_telegram_id(session, message.from_user.id)
 

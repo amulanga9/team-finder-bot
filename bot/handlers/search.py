@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime
 
-from database.db import async_session_maker
+from database.db import AsyncSessionLocal
 from database import crud
 from database.models import UserType
 from keyboards.inline import (
@@ -40,7 +40,7 @@ search_results_cache = {}
 async def cmd_search(message: Message):
     """Команда /search - поиск teammates (для всех типов пользователей)"""
     try:
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             # Получаем пользователя
             user = await crud.get_user_by_telegram_id(session, message.from_user.id)
 
