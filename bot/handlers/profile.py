@@ -205,3 +205,29 @@ async def show_team_leader_profile(message: Message, stats: dict, session):
     # Отправляем профиль
     keyboard = get_profile_keyboard("team")
     await message.answer(profile_text, reply_markup=keyboard)
+
+
+# ===== CALLBACK HANDLERS =====
+
+@router.callback_query(F.data == "edit_profile")
+async def edit_profile_handler(callback: CallbackQuery):
+    """Редактировать профиль (TODO)"""
+    await callback.answer(
+        "⚠️ Функция редактирования профиля будет добавлена в следующей версии!\n\n"
+        "Пока вы можете пересоздать профиль через /start",
+        show_alert=True
+    )
+
+
+@router.callback_query(F.data == "search_teams")
+async def search_teams_handler(callback: CallbackQuery):
+    """Начать поиск команд"""
+    await callback.answer("Запускаю поиск...")
+    await callback.message.answer("Используйте команду /search для поиска!")
+
+
+@router.callback_query(F.data == "search_now")
+async def search_now_handler(callback: CallbackQuery):
+    """Начать поиск"""
+    await callback.answer("Запускаю поиск...")
+    await callback.message.answer("Используйте команду /search для поиска!")
