@@ -5,14 +5,14 @@ from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime
 
-from database.db import AsyncSessionLocal
-from database import crud
-from database.models import UserType
-from keyboards.inline import (
+from bot.database.db import AsyncSessionLocal
+from bot.database import crud
+from bot.database.models import UserType
+from bot.keyboards.inline import (
     get_cofounder_search_keyboard, get_participant_team_keyboard,
     get_search_empty_keyboard
 )
-from utils.texts import (
+from bot.utils.texts import (
     # Для команд
     SEARCH_RESULTS_HEADER, SEARCH_NO_RESULTS, SEARCH_USER_CARD,
     USER_DETAIL, INVITATION_SENT, INVITATION_LIMIT_REACHED,

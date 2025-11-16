@@ -8,9 +8,9 @@ import logging
 from datetime import datetime, timedelta
 from sqlalchemy import select, update, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.db import get_db
-from database.models import Invitation, InvitationStatus, User
-from config import settings
+from bot.database.db import get_db
+from bot.database.models import Invitation, InvitationStatus, User
+from bot.config import settings
 
 logger = logging.getLogger(__name__)
 

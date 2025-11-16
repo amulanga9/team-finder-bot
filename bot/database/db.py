@@ -3,8 +3,8 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import AsyncAdaptedQueuePool
 from sqlalchemy import text
-from database.models import Base
-from config import settings
+from bot.database.models import Base
+from bot.config import settings
 import logging
 
 logger = logging.getLogger(__name__)

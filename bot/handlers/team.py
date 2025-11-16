@@ -2,11 +2,11 @@
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import Message
-from database.db import AsyncSessionLocal
-from database import crud
-from database.models import UserType, InvitationStatus
-from keyboards.inline import get_profile_keyboard, get_invitation_response_keyboard
-from utils.texts import (
+from bot.database.db import AsyncSessionLocal
+from bot.database import crud
+from bot.database.models import UserType, InvitationStatus
+from bot.keyboards.inline import get_profile_keyboard, get_invitation_response_keyboard
+from bot.utils.texts import (
     TEAM_STATS, TEAM_INVITATIONS_SECTION, TEAM_REQUESTS_SECTION,
     NO_TEAM_INVITATIONS, NO_TEAM_REQUESTS, TEAM_TIP,
     format_invitation_status, format_request_status,

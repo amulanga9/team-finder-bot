@@ -6,11 +6,11 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.db import AsyncSessionLocal
-from database import crud
-from database.models import UserType
-from utils.states import TeamRegistration, CofounderRegistration, SeekerRegistration
-from utils.texts import (
+from bot.database.db import AsyncSessionLocal
+from bot.database import crud
+from bot.database.models import UserType
+from bot.utils.states import TeamRegistration, CofounderRegistration, SeekerRegistration
+from bot.utils.texts import (
     START_MESSAGE,
     # Team
     TEAM_NAME_REQUEST, TEAM_NAME_ERROR,
@@ -29,7 +29,7 @@ from utils.texts import (
     COLD_START_MESSAGE,
     format_selected_skills, SKILLS_DESCRIPTIONS
 )
-from keyboards.inline import (
+from bot.keyboards.inline import (
     get_user_type_keyboard, get_skip_keyboard,
     get_skills_keyboard, get_single_skill_keyboard,
     get_limited_skills_keyboard, get_final_actions_keyboard

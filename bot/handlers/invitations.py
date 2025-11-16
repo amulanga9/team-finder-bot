@@ -4,10 +4,10 @@ from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
-from database.db import AsyncSessionLocal
-from database import crud
-from database.models import InvitationStatus
-from utils.texts import (
+from bot.database.db import AsyncSessionLocal
+from bot.database import crud
+from bot.database.models import InvitationStatus
+from bot.utils.texts import (
     INVITATION_RECEIVED,
     BUTTON_ACCEPT_INVITE, BUTTON_MEET, BUTTON_REJECT_INVITE,
     INVITATION_ACCEPTED_TO_TEAM, INVITATION_ACCEPTED_TO_USER,

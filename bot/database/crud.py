@@ -1,6 +1,6 @@
 from sqlalchemy import select, update, delete, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import User, Team, Invitation, UserType, InvitationStatus, TeamStatus
+from bot.database.models import User, Team, Invitation, UserType, InvitationStatus, TeamStatus
 from typing import Optional, List
 from datetime import datetime, timedelta
 

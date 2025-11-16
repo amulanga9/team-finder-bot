@@ -1,6 +1,6 @@
 """Инлайн клавиатуры бота"""
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from utils.texts import (
+from bot.utils.texts import (
     SKILLS_DESCRIPTIONS, get_skill_button_text, BUTTON_DONE, BUTTON_SKIP,
     BUTTON_SEARCH_NOW, BUTTON_WAIT, BUTTON_EDIT_PROFILE, BUTTON_SEARCH_TEAMS,
     BUTTON_SEARCH, BUTTON_EDIT, BUTTON_ACCEPT_INVITE, BUTTON_REJECT_INVITE

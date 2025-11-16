@@ -5,16 +5,16 @@ import sys
 from pathlib import Path
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from config import settings
-from database.db import init_db, close_db, create_tables
-from middlewares import ThrottlingMiddleware
-from tasks import start_background_tasks, stop_background_tasks
-from handlers.start import router as start_router
-from handlers.search import router as search_router
-from handlers.invitations import router as invitations_router
-from handlers.profile import router as profile_router
-from handlers.team import router as team_router
-from handlers.commands import router as commands_router
+from bot.config import settings
+from bot.database.db import init_db, close_db, create_tables
+from bot.middlewares import ThrottlingMiddleware
+from bot.tasks import start_background_tasks, stop_background_tasks
+from bot.handlers.start import router as start_router
+from bot.handlers.search import router as search_router
+from bot.handlers.invitations import router as invitations_router
+from bot.handlers.profile import router as profile_router
+from bot.handlers.team import router as team_router
+from bot.handlers.commands import router as commands_router
 
 
 # ===== Настройка логирования =====
