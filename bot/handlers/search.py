@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime
 
-from bot.database.db import AsyncSessionLocal
+from bot.database.db import get_db
 from bot.database import crud
 from bot.database.models import UserType
 from bot.keyboards.inline import (
@@ -40,7 +40,7 @@ search_results_cache = {}
 async def cmd_search(message: Message):
     """Команда /search - поиск teammates (для всех типов пользователей)"""
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             # Получаем пользователя
             user = await crud.get_user_by_telegram_id(session, message.from_user.id)
 
@@ -263,7 +263,7 @@ async def show_user_detail(callback: CallbackQuery):
     user_id = int(callback.data.split("_")[1])
 
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             user = await crud.get_user_by_id(session, user_id)
 
             if not user:
@@ -308,7 +308,7 @@ async def send_invitation(callback: CallbackQuery):
     team_id = int(parts[2])
 
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             from_user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
 
             if not from_user:
@@ -362,7 +362,7 @@ async def send_collaboration_request(callback: CallbackQuery, bot: Bot):
     current_index = int(parts[3])
 
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             from_user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
 
             if not from_user:
@@ -428,7 +428,7 @@ async def next_cofounder(callback: CallbackQuery):
     next_index = current_index + 1
 
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             from_user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
 
             if not from_user:
@@ -465,7 +465,7 @@ async def interested_in_team(callback: CallbackQuery, bot: Bot):
     current_index = int(parts[3])
 
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             from_user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
 
             if not from_user:
@@ -533,7 +533,7 @@ async def show_next_team(callback: CallbackQuery, current_index: int):
     next_index = current_index + 1
 
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             from_user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
 
             if not from_user:

@@ -2,7 +2,7 @@
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import Message
-from bot.database.db import AsyncSessionLocal
+from bot.database.db import get_db
 from bot.database import crud
 from bot.database.models import UserType, InvitationStatus
 from bot.keyboards.inline import get_profile_keyboard, get_invitation_response_keyboard
@@ -19,7 +19,7 @@ router = Router()
 @router.message(Command("team"))
 async def cmd_team(message: Message):
     """Показать статистику команды (только для team_lead)"""
-    async with AsyncSessionLocal() as session:
+    async with get_db() as session:
         # Получаем пользователя
         user = await crud.get_user_by_telegram_id(session, message.from_user.id)
         if not user:

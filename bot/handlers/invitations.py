@@ -4,7 +4,7 @@ from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
-from bot.database.db import AsyncSessionLocal
+from bot.database.db import get_db
 from bot.database import crud
 from bot.database.models import InvitationStatus
 from bot.utils.texts import (
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 async def cmd_invitations(message: Message):
     """Команда /invitations - показать приглашения"""
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             # Получаем пользователя
             user = await crud.get_user_by_telegram_id(session, message.from_user.id)
 
@@ -57,7 +57,7 @@ async def cmd_invitations(message: Message):
 async def show_invitation(message: Message, invitation):
     """Показать приглашение"""
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             # Получаем команду
             team = await crud.get_team_by_id(session, invitation.from_team_id) if invitation.from_team_id else None
             from_user = await crud.get_user_by_id(session, invitation.from_user_id)
@@ -116,7 +116,7 @@ async def accept_invitation(callback: CallbackQuery, bot: Bot):
     invitation_id = int(callback.data.split("_")[2])
 
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             invitation = await crud.get_invitation_by_id(session, invitation_id)
 
             if not invitation:
@@ -187,7 +187,7 @@ async def meet_invitation(callback: CallbackQuery, bot: Bot):
     invitation_id = int(callback.data.split("_")[2])
 
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             invitation = await crud.get_invitation_by_id(session, invitation_id)
 
             if not invitation:
@@ -249,7 +249,7 @@ async def reject_invitation(callback: CallbackQuery, bot: Bot):
     invitation_id = int(callback.data.split("_")[2])
 
     try:
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             invitation = await crud.get_invitation_by_id(session, invitation_id)
 
             if not invitation:

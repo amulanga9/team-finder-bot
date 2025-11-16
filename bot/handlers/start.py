@@ -6,7 +6,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.database.db import AsyncSessionLocal
+from bot.database.db import get_db
 from bot.database import crud
 from bot.database.models import UserType
 from bot.utils.states import TeamRegistration, CofounderRegistration, SeekerRegistration
@@ -167,7 +167,7 @@ async def finish_team_skills_selection(callback: CallbackQuery, state: FSMContex
 
     try:
         # Сохраняем в БД
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             # Проверяем, существует ли пользователь
             user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
 
@@ -342,7 +342,7 @@ async def finish_cofounder_registration(message: Message, user_data, state: FSMC
 
     try:
         # Сохраняем в БД
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             # Создаем пользователя
             user = await crud.create_user(
                 session=session,
@@ -460,7 +460,7 @@ async def finish_seeker_skills_selection(callback: CallbackQuery, state: FSMCont
 
     try:
         # Сохраняем в БД
-        async with AsyncSessionLocal() as session:
+        async with get_db() as session:
             # Создаем пользователя
             user = await crud.create_user(
                 session=session,
