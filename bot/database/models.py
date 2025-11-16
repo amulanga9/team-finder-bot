@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import BigInteger, String, Text, DateTime, ForeignKey, Enum, Boolean, Index, CheckConstraint
+from sqlalchemy import BigInteger, String, Text, DateTime, ForeignKey, Enum, Boolean, Index
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing import Optional, List
 import enum
@@ -39,7 +39,7 @@ class User(Base):
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False, index=True)
     username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    user_type: Mapped[UserType] = mapped_column(Enum(UserType), nullable=False, index=True)
+    user_type: Mapped[UserType] = mapped_column(Enum(UserType, name="usertype"), nullable=False, index=True)
 
     # Навыки и идея
     primary_skill: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -81,7 +81,6 @@ class User(Base):
     __table_args__ = (
         Index('idx_user_active_search', 'user_type', 'is_searching', 'deleted_at'),
         Index('idx_user_last_active', 'last_active', 'deleted_at'),
-        CheckConstraint("user_type IN ('participant', 'cofounder', 'team')", name='check_user_type'),
     )
 
     def __repr__(self) -> str:
@@ -99,7 +98,7 @@ class Team(Base):
     needed_skills: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Статус команды
-    status: Mapped[TeamStatus] = mapped_column(Enum(TeamStatus), default=TeamStatus.ACTIVE, index=True)
+    status: Mapped[TeamStatus] = mapped_column(Enum(TeamStatus, name="teamstatus"), default=TeamStatus.ACTIVE, index=True)
     is_full: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
@@ -136,7 +135,7 @@ class Invitation(Base):
 
     # Статус и временные метки
     status: Mapped[InvitationStatus] = mapped_column(
-        Enum(InvitationStatus),
+        Enum(InvitationStatus, name="invitationstatus"),
         default=InvitationStatus.PENDING,
         index=True
     )
@@ -167,7 +166,6 @@ class Invitation(Base):
         Index('idx_invitation_daily_limit', 'from_user_id', 'created_at'),
         Index('idx_invitation_team_daily', 'from_team_id', 'created_at'),
         Index('idx_invitation_expired', 'status', 'expires_at'),
-        CheckConstraint("status IN ('pending', 'accepted', 'rejected', 'expired')", name='check_invitation_status'),
     )
 
     def __repr__(self) -> str:
