@@ -215,36 +215,40 @@ async def find_users_by_skills(
     exclude_user_id: Optional[int] = None
 ) -> List[User]:
     """
-    Найти пользователей по навыкам
-    
+    Найти пользователей по навыкам (участников И со-фаундеров)
+
+    Команда может найти:
+    - Участников (готовых присоединиться)
+    - Со-фаундеров (которым нужна помощь с идеей)
+
     Args:
         session: сессия БД
         needed_skills: строка с нужными навыками (например: "Mobile (Flutter), Design (Figma)")
         exclude_user_id: ID пользователя, которого нужно исключить из поиска
-    
+
     Returns:
         Список пользователей, отсортированный по активности
     """
     # Разбираем навыки
     skills_list = [skill.strip() for skill in needed_skills.split(',')]
-    
-    # Строим запрос для поиска пользователей с нужными навыками
-    query = select(User).where(User.user_type == UserType.PARTICIPANT)
-    
+
+    # Строим запрос для поиска участников И со-фаундеров
+    query = select(User).where(User.user_type.in_([UserType.PARTICIPANT, UserType.COFOUNDER]))
+
     if exclude_user_id:
         query = query.where(User.id != exclude_user_id)
-    
+
     # Ищем по primary_skill или additional_skills
     skill_conditions = []
     for skill in skills_list:
         skill_conditions.append(User.primary_skill.ilike(f"%{skill}%"))
         skill_conditions.append(User.additional_skills.ilike(f"%{skill}%"))
-    
+
     query = query.where(or_(*skill_conditions))
-    
+
     # Сортируем по активности (last_active от новых к старым)
     query = query.order_by(User.last_active.desc())
-    
+
     result = await session.execute(query)
     return list(result.scalars().all())
 
