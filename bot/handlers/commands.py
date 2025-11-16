@@ -124,3 +124,35 @@ async def set_language(callback: CallbackQuery):
             get_text("error_try_again", Language.RU),
             show_alert=True
         )
+
+
+# ===== FALLBACK ОБРАБОТЧИКИ =====
+
+import logging
+logger = logging.getLogger(__name__)
+
+
+@router.callback_query()
+async def catch_unhandled_callback(callback: CallbackQuery):
+    """Fallback для необработанных callback запросов"""
+    logger.warning(
+        f"⚠️ Необработанный callback: '{callback.data}' "
+        f"от пользователя {callback.from_user.id} (@{callback.from_user.username})"
+    )
+    await callback.answer(
+        "⚠️ Эта кнопка временно недоступна. Используйте /help для списка команд.",
+        show_alert=True
+    )
+
+
+@router.message()
+async def catch_unhandled_message(message: Message):
+    """Fallback для необработанных сообщений"""
+    logger.warning(
+        f"⚠️ Необработанное сообщение: '{message.text}' "
+        f"от пользователя {message.from_user.id} (@{message.from_user.username})"
+    )
+    await message.answer(
+        "❓ Я не понимаю эту команду.\n\n"
+        "Используйте /help для списка доступных команд."
+    )

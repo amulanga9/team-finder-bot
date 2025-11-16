@@ -84,13 +84,14 @@ class BotApplication:
         )
 
         # 5. Регистрация роутеров (handlers)
+        # ВАЖНО: commands_router должен быть последним для fallback обработчиков
         logger.info("Регистрация обработчиков...")
-        self.dp.include_router(commands_router)  # /help, /cancel первыми
         self.dp.include_router(start_router)
         self.dp.include_router(search_router)
         self.dp.include_router(invitations_router)
         self.dp.include_router(profile_router)
         self.dp.include_router(team_router)
+        self.dp.include_router(commands_router)  # Последний для fallback
 
         # 6. Запуск фоновых задач
         logger.info("Запуск фоновых задач очистки...")
