@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import AsyncAdaptedQueuePool
+from sqlalchemy import text
 from database.models import Base
 from config import settings
 import logging
@@ -111,4 +112,16 @@ async def drop_tables() -> None:
     logger.warning("ВНИМАНИЕ: Удаление всех таблиц из БД...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    logger.info("Таблицы удалены")
+        # Удаляем старые enum типы
+        await conn.execute(text("DROP TYPE IF EXISTS usertype CASCADE"))
+        await conn.execute(text("DROP TYPE IF EXISTS invitationstatus CASCADE"))
+        await conn.execute(text("DROP TYPE IF EXISTS teamstatus CASCADE"))
+    logger.info("Таблицы и enum типы удалены")
+
+
+async def recreate_database() -> None:
+    """Полностью пересоздать базу данных (для разработки)"""
+    logger.warning("ВНИМАНИЕ: Полное пересоздание базы данных...")
+    await drop_tables()
+    await create_tables()
+    logger.info("База данных успешно пересоздана")
