@@ -204,11 +204,22 @@ async def show_cofounder_card(message: Message, current_user, results: list, ind
 # ===== ПОИСК ДЛЯ СОИСКАТЕЛЕЙ =====
 
 async def search_for_participant(message: Message, user, session):
-    """Поиск команд для соискателя (Tinder-style)"""
+    """Поиск возможностей для участника: команды И со-фаундеры"""
     # Ищем команды, которым нужны навыки соискателя
     matching_teams = await crud.find_teams_for_participant(session, user.id)
 
-    if not matching_teams:
+    # Ищем со-фаундеров, которым может помочь участник
+    matching_cofounders = await crud.find_cofounders_for_participant(session, user.id)
+
+    # Объединяем результаты (команды + со-фаундеры)
+    # Формат: список кортежей (объект, тип)
+    opportunities = []
+    for team in matching_teams:
+        opportunities.append(('team', team))
+    for cofounder in matching_cofounders:
+        opportunities.append(('cofounder', cofounder))
+
+    if not opportunities:
         # Считаем сколько команд ищут основной навык
         skill = user.primary_skill or "этот навык"
         teams_count = await crud.count_teams_need_skill(session, skill)
@@ -227,10 +238,53 @@ async def search_for_participant(message: Message, user, session):
 
     # Сохраняем результаты в кэш
     cache_key = f"participant_search_{user.id}"
-    search_results_cache[cache_key] = matching_teams
+    search_results_cache[cache_key] = opportunities
 
-    # Показываем первую команду
-    await show_team_card(message, matching_teams, 0)
+    # Показываем первую возможность
+    await show_opportunity_card(message, user, opportunities, 0)
+
+
+async def show_opportunity_card(message: Message, user, opportunities: list, index: int):
+    """Показать карточку возможности (команда или со-фаундер)"""
+    if index >= len(opportunities):
+        await message.answer("Больше нет результатов! 🎉\n\nМожете начать поиск заново: /search")
+        return
+
+    obj_type, obj = opportunities[index]
+
+    if obj_type == 'team':
+        # Показываем карточку команды
+        idea = obj.idea_description if obj.idea_description else "Описание отсутствует"
+        card_text = PARTICIPANT_TEAM_CARD.format(
+            team_name=obj.team_name,
+            idea=idea,
+            needed_skills=obj.needed_skills or "Не указаны"
+        )
+        keyboard = get_participant_team_keyboard(obj.id, index)
+    else:  # cofounder
+        # Показываем карточку со-фаундера
+        idea = obj.idea_what or "Идея в разработке"
+        activity = format_user_activity(obj.last_active)
+
+        # Простая совместимость для участников с со-фаундерами
+        stars = 3  # средний рейтинг по умолчанию
+
+        card_text = COFOUNDER_SEARCH_CARD.format(
+            name=obj.name,
+            activity=activity,
+            skill=obj.primary_skill or "Не указан",
+            idea=idea,
+            stars_display=format_stars(stars),
+            compatibility_text=get_compatibility_text(stars),
+            match_reason="Со-фаундер ищет помощь в реализации идеи"
+        )
+        # Используем ту же клавиатуру с другим callback
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Хочу помочь!", callback_data=f"help_cofounder_{obj.id}_{index}")],
+            [InlineKeyboardButton(text="👉 Следующий", callback_data=f"next_opportunity_{index}")]
+        ])
+
+    await message.answer(card_text, reply_markup=keyboard)
 
 
 async def show_team_card(message: Message, teams: list, index: int):
@@ -529,7 +583,7 @@ async def skip_team(callback: CallbackQuery):
 
 
 async def show_next_team(callback: CallbackQuery, current_index: int):
-    """Показать следующую команду"""
+    """Показать следующую возможность (команду или со-фаундера)"""
     next_index = current_index + 1
 
     try:
@@ -540,9 +594,9 @@ async def show_next_team(callback: CallbackQuery, current_index: int):
                 return
 
             cache_key = f"participant_search_{from_user.id}"
-            teams = search_results_cache.get(cache_key, [])
+            opportunities = search_results_cache.get(cache_key, [])
 
-            if not teams:
+            if not opportunities:
                 await callback.message.answer("❌ Результаты поиска устарели. Начните поиск заново: /search")
                 return
 
@@ -552,11 +606,11 @@ async def show_next_team(callback: CallbackQuery, current_index: int):
             except:
                 pass
 
-            # Показываем следующую команду
-            await show_team_card(callback.message, teams, next_index)
+            # Показываем следующую возможность
+            await show_opportunity_card(callback.message, from_user, opportunities, next_index)
 
     except Exception as e:
-        logger.error(f"Ошибка при показе следующей команды: {e}")
+        logger.error(f"Ошибка при показе следующей возможности: {e}")
 
 
 @router.callback_query(F.data == "change_skills")
@@ -573,3 +627,73 @@ async def wait_notify(callback: CallbackQuery):
         await callback.message.delete()
     except:
         pass
+
+
+@router.callback_query(F.data.startswith("help_cofounder_"))
+async def help_cofounder(callback: CallbackQuery, bot: Bot):
+    """Участник хочет помочь со-фаундеру"""
+    parts = callback.data.split("_")
+    cofounder_id = int(parts[2])
+    current_index = int(parts[3])
+
+    try:
+        async with get_db() as session:
+            from_user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
+
+            if not from_user:
+                await callback.answer("❌ Ошибка авторизации", show_alert=True)
+                return
+
+            cofounder = await crud.get_user_by_id(session, cofounder_id)
+
+            if not cofounder:
+                await callback.answer("❌ Пользователь не найден", show_alert=True)
+                return
+
+            # Создаем запрос от участника к со-фаундеру
+            invitation = await crud.create_invitation(
+                session=session,
+                from_user_id=from_user.id,
+                to_user_id=cofounder.id,
+                from_team_id=None
+            )
+
+            # Уведомляем участника
+            await callback.message.answer(
+                f"✅ Запрос отправлен со-фаундеру {cofounder.name}!"
+            )
+
+            # Уведомляем со-фаундера
+            if cofounder.telegram_id:
+                skills = from_user.primary_skill
+                if from_user.additional_skills:
+                    skills += f", {from_user.additional_skills}"
+
+                try:
+                    await bot.send_message(
+                        cofounder.telegram_id,
+                        f"📩 <b>{from_user.name}</b> хочет помочь с вашей идеей!\n\n"
+                        f"💼 Навыки: {skills}\n\n"
+                        f"Посмотрите детали в /profile",
+                        parse_mode="HTML"
+                    )
+                except Exception as e:
+                    logger.error(f"Не удалось отправить уведомление: {e}")
+
+            await callback.answer("✅ Запрос отправлен!")
+
+            # Показываем следующую возможность
+            await show_next_team(callback, current_index)
+
+    except Exception as e:
+        logger.error(f"Ошибка при отправке запроса со-фаундеру: {e}")
+        await callback.answer("❌ Произошла ошибка", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("next_opportunity_"))
+async def next_opportunity(callback: CallbackQuery):
+    """Показать следующую возможность (для смешанного поиска)"""
+    current_index = int(callback.data.split("_")[2])
+
+    await callback.answer("Следующий...")
+    await show_next_team(callback, current_index)

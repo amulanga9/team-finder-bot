@@ -444,7 +444,11 @@ async def find_cofounders(
     user_id: int
 ) -> List[tuple[User, int]]:
     """
-    Найти других соло-основателей для коллаборации
+    Найти других людей для коллаборации (со-фаундеров И участников)
+
+    Со-фаундер может найти:
+    - Других со-фаундеров для партнерства
+    - Участников, которые могут помочь реализовать идею
 
     Returns:
         Список кортежей (User, stars) отсортированный по совместимости
@@ -454,27 +458,27 @@ async def find_cofounders(
     if not current_user:
         return []
 
-    # Ищем других соло-основателей
+    # Ищем других со-фаундеров И участников
     query = select(User).where(
         and_(
-            User.user_type == UserType.COFOUNDER,
+            User.user_type.in_([UserType.COFOUNDER, UserType.PARTICIPANT]),
             User.id != user_id
         )
     ).order_by(User.last_active.desc())
 
     result = await session.execute(query)
-    cofounders = list(result.scalars().all())
+    candidates = list(result.scalars().all())
 
     # Рассчитываем совместимость для каждого
-    cofounders_with_stars = []
-    for cofounder in cofounders:
-        stars = calculate_compatibility(current_user, cofounder)
-        cofounders_with_stars.append((cofounder, stars))
+    candidates_with_stars = []
+    for candidate in candidates:
+        stars = calculate_compatibility(current_user, candidate)
+        candidates_with_stars.append((candidate, stars))
 
     # Сортируем по количеству звезд (от большего к меньшему)
-    cofounders_with_stars.sort(key=lambda x: x[1], reverse=True)
+    candidates_with_stars.sort(key=lambda x: x[1], reverse=True)
 
-    return cofounders_with_stars
+    return candidates_with_stars
 
 
 async def find_teams_for_participant(
@@ -524,6 +528,35 @@ async def find_teams_for_participant(
     matching_teams.sort(key=lambda t: t.updated_at, reverse=True)
 
     return matching_teams
+
+
+async def find_cofounders_for_participant(
+    session: AsyncSession,
+    participant_id: int
+) -> List[User]:
+    """
+    Найти со-фаундеров, которым могут помочь навыки участника
+
+    Returns:
+        Список со-фаундеров, отсортированный по активности
+    """
+    # Получаем участника
+    participant = await get_user_by_id(session, participant_id)
+    if not participant:
+        return []
+
+    # Ищем активных со-фаундеров (исключая самого участника)
+    query = select(User).where(
+        and_(
+            User.user_type == UserType.COFOUNDER,
+            User.id != participant_id
+        )
+    ).order_by(User.last_active.desc())
+
+    result = await session.execute(query)
+    cofounders = list(result.scalars().all())
+
+    return cofounders
 
 
 async def count_teams_need_skill(
