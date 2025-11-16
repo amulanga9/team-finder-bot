@@ -47,7 +47,7 @@ class User(Base):
     username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     user_type: Mapped[UserType] = mapped_column(Enum(UserType, name="usertype"), nullable=False, index=True)
-    language: Mapped[Language] = mapped_column(Enum(Language, name="language"), nullable=False, default=Language.RU, server_default="ru")
+    language: Mapped[Language] = mapped_column(Enum(Language, name="language"), nullable=False, default=Language.RU)
 
     # Навыки и идея
     primary_skill: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
