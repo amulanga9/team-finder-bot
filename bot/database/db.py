@@ -116,6 +116,7 @@ async def drop_tables() -> None:
         await conn.execute(text("DROP TYPE IF EXISTS usertype CASCADE"))
         await conn.execute(text("DROP TYPE IF EXISTS invitationstatus CASCADE"))
         await conn.execute(text("DROP TYPE IF EXISTS teamstatus CASCADE"))
+        await conn.execute(text("DROP TYPE IF EXISTS language CASCADE"))
     logger.info("Таблицы и enum типы удалены")
 
 

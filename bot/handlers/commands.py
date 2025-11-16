@@ -1,8 +1,11 @@
 """Обработчики основных команд бота"""
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
+from bot.database.db import get_db
+from bot.database import crud, Language
+from bot.utils.i18n import get_text, get_language_keyboard
 
 router = Router()
 
@@ -71,3 +74,53 @@ async def cmd_cancel(message: Message, state: FSMContext):
         "/search - Поиск teammates\n"
         "/profile - Ваш профиль"
     )
+
+
+@router.message(Command("language"))
+async def cmd_language(message: Message):
+    """Команда /language - выбор языка интерфейса"""
+    await message.answer(
+        get_text("language_select", Language.RU),  # Показываем на всех языках
+        reply_markup=get_language_keyboard()
+    )
+
+
+@router.callback_query(F.data.startswith("lang_"))
+async def set_language(callback: CallbackQuery):
+    """Установить выбранный язык"""
+    lang_code = callback.data.split("_")[1]  # ru, uz, en
+
+    # Маппинг кодов на enum
+    lang_map = {
+        "ru": Language.RU,
+        "uz": Language.UZ,
+        "en": Language.EN,
+    }
+
+    new_lang = lang_map.get(lang_code, Language.RU)
+
+    try:
+        async with get_db() as session:
+            user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
+
+            if not user:
+                await callback.answer(
+                    "❌ Сначала зарегистрируйтесь через /start",
+                    show_alert=True
+                )
+                return
+
+            # Обновляем язык пользователя
+            await crud.update_user_language(session, user.id, new_lang)
+
+            # Показываем подтверждение на выбранном языке
+            await callback.message.edit_text(
+                get_text("language_changed", new_lang)
+            )
+            await callback.answer()
+
+    except Exception as e:
+        await callback.answer(
+            get_text("error_try_again", Language.RU),
+            show_alert=True
+        )

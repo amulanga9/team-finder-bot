@@ -1,6 +1,6 @@
 from sqlalchemy import select, update, delete, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from bot.database.models import User, Team, Invitation, UserType, InvitationStatus, TeamStatus
+from bot.database.models import User, Team, Invitation, UserType, InvitationStatus, TeamStatus, Language
 from typing import Optional, List
 from datetime import datetime, timedelta
 
@@ -51,6 +51,34 @@ async def get_user_by_id(session: AsyncSession, user_id: int) -> Optional[User]:
     return result.scalar_one_or_none()
 
 
+async def check_name_exists(
+    session: AsyncSession,
+    name: str,
+    user_type: UserType
+) -> bool:
+    """
+    Проверить, существует ли пользователь с таким именем и типом
+
+    Args:
+        session: сессия БД
+        name: имя пользователя
+        user_type: тип пользователя (COFOUNDER или PARTICIPANT)
+
+    Returns:
+        True если имя уже занято, False если свободно
+    """
+    result = await session.execute(
+        select(User).where(
+            and_(
+                User.name == name,
+                User.user_type == user_type,
+                User.deleted_at == None
+            )
+        )
+    )
+    return result.scalar_one_or_none() is not None
+
+
 async def update_user_last_active(session: AsyncSession, user_id: int) -> None:
     """Обновить время последней активности пользователя"""
     await session.execute(
@@ -59,6 +87,31 @@ async def update_user_last_active(session: AsyncSession, user_id: int) -> None:
         .values(last_active=datetime.utcnow())
     )
     await session.commit()
+
+
+async def update_user_language(
+    session: AsyncSession,
+    user_id: int,
+    language: Language
+) -> Optional[User]:
+    """
+    Обновить язык интерфейса пользователя
+
+    Args:
+        session: сессия БД
+        user_id: ID пользователя
+        language: новый язык (Language enum)
+
+    Returns:
+        Обновленный объект User или None если пользователь не найден
+    """
+    await session.execute(
+        update(User)
+        .where(User.id == user_id)
+        .values(language=language)
+    )
+    await session.commit()
+    return await get_user_by_id(session, user_id)
 
 
 async def count_users(session: AsyncSession) -> int:

@@ -9,6 +9,13 @@ class Base(DeclarativeBase):
     pass
 
 
+class Language(enum.Enum):
+    """Язык интерфейса"""
+    RU = "ru"  # Русский
+    UZ = "uz"  # Узбекский (O'zbek)
+    EN = "en"  # English
+
+
 class UserType(enum.Enum):
     """Тип пользователя"""
     PARTICIPANT = "participant"  # Соискатель
@@ -40,6 +47,7 @@ class User(Base):
     username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     user_type: Mapped[UserType] = mapped_column(Enum(UserType, name="usertype"), nullable=False, index=True)
+    language: Mapped[Language] = mapped_column(Enum(Language, name="language"), nullable=False, default=Language.RU, server_default="ru")
 
     # Навыки и идея
     primary_skill: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -81,6 +89,7 @@ class User(Base):
     __table_args__ = (
         Index('idx_user_active_search', 'user_type', 'is_searching', 'deleted_at'),
         Index('idx_user_last_active', 'last_active', 'deleted_at'),
+        Index('idx_user_name_type_unique', 'name', 'user_type', unique=True),  # Уникальность имени в рамках типа
     )
 
     def __repr__(self) -> str:

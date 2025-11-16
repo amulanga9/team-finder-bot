@@ -7,8 +7,9 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.database.db import get_db
-from bot.database import crud
+from bot.database import crud, Language
 from bot.database.models import UserType
+from bot.utils.i18n import get_text
 from bot.utils.states import TeamRegistration, CofounderRegistration, SeekerRegistration
 from bot.utils.texts import (
     START_MESSAGE,
@@ -349,11 +350,21 @@ async def finish_cofounder_registration(message: Message, user_data, state: FSMC
             if user:
                 # Пользователь уже зарегистрирован
                 await message.answer(
-                    f"⚠️ Вы уже зарегистрированы!\n\n"
-                    f"Используйте /profile для просмотра профиля или /search для поиска.",
+                    get_text("already_registered", Language.RU),
                     parse_mode="HTML"
                 )
                 await state.clear()
+                return
+
+            # Проверяем уникальность имени для со-фаундеров
+            if await crud.check_name_exists(session, name, UserType.COFOUNDER):
+                await message.answer(
+                    get_text("name_already_exists", Language.RU, name=name),
+                    parse_mode="HTML"
+                )
+                # Возвращаем обратно к вводу имени
+                await message.answer(COFOUNDER_NAME_REQUEST, parse_mode="HTML")
+                await state.set_state(CofounderRegistration.waiting_for_name)
                 return
 
             # Создаем нового пользователя
@@ -480,12 +491,22 @@ async def finish_seeker_skills_selection(callback: CallbackQuery, state: FSMCont
             if user:
                 # Пользователь уже зарегистрирован
                 await callback.message.edit_text(
-                    f"⚠️ Вы уже зарегистрированы!\n\n"
-                    f"Используйте /profile для просмотра профиля или /search для поиска.",
+                    get_text("already_registered", Language.RU),
                     parse_mode="HTML"
                 )
                 await state.clear()
                 await callback.answer("Вы уже зарегистрированы!")
+                return
+
+            # Проверяем уникальность имени для участников
+            if await crud.check_name_exists(session, name, UserType.PARTICIPANT):
+                await callback.answer(
+                    get_text("name_already_exists", Language.RU, name=name),
+                    show_alert=True
+                )
+                # Возвращаем обратно к вводу имени
+                await callback.message.edit_text(SEEKER_NAME_REQUEST, parse_mode="HTML")
+                await state.set_state(SeekerRegistration.waiting_for_name)
                 return
 
             # Создаем нового пользователя
