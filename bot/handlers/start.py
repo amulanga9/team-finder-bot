@@ -362,7 +362,7 @@ async def finish_cofounder_registration(message: Message, user_data, state: FSMC
                 telegram_id=user_data.id,
                 username=user_data.username,
                 name=name,
-                user_type=UserType.PARTICIPANT,  # Со-фаундер как участник
+                user_type=UserType.COFOUNDER,  # Со-фаундер ищет со-фаундера
                 primary_skill=primary_skill,
                 idea_what=idea_what,
                 idea_who=idea_who
