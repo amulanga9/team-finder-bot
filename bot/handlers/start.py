@@ -342,7 +342,7 @@ async def finish_cofounder_registration(message: Message, user_data, state: FSMC
 
     try:
         # Сохраняем в БД
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             # Создаем пользователя
             user = await crud.create_user(
                 session=session,
@@ -460,7 +460,7 @@ async def finish_seeker_skills_selection(callback: CallbackQuery, state: FSMCont
 
     try:
         # Сохраняем в БД
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             # Создаем пользователя
             user = await crud.create_user(
                 session=session,

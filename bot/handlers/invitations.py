@@ -57,7 +57,7 @@ async def cmd_invitations(message: Message):
 async def show_invitation(message: Message, invitation):
     """Показать приглашение"""
     try:
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             # Получаем команду
             team = await crud.get_team_by_id(session, invitation.from_team_id) if invitation.from_team_id else None
             from_user = await crud.get_user_by_id(session, invitation.from_user_id)
@@ -116,7 +116,7 @@ async def accept_invitation(callback: CallbackQuery, bot: Bot):
     invitation_id = int(callback.data.split("_")[2])
 
     try:
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             invitation = await crud.get_invitation_by_id(session, invitation_id)
 
             if not invitation:
@@ -187,7 +187,7 @@ async def meet_invitation(callback: CallbackQuery, bot: Bot):
     invitation_id = int(callback.data.split("_")[2])
 
     try:
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             invitation = await crud.get_invitation_by_id(session, invitation_id)
 
             if not invitation:
@@ -249,7 +249,7 @@ async def reject_invitation(callback: CallbackQuery, bot: Bot):
     invitation_id = int(callback.data.split("_")[2])
 
     try:
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             invitation = await crud.get_invitation_by_id(session, invitation_id)
 
             if not invitation:
