@@ -1,8 +1,14 @@
 """Pytest configuration and fixtures"""
+import os
 import pytest
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
+
+# Set test environment variables before importing app modules
+os.environ["BOT_TOKEN"] = "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefgh"
+os.environ["DB_PASSWORD"] = "test_password"
+os.environ["DB_NAME"] = "test_db"
 
 from bot.database.models import Base, UserType, Language
 from bot.database import crud
@@ -20,13 +26,20 @@ def event_loop():
 async def db_engine():
     """Create test database engine"""
     # Use in-memory SQLite for tests
+    from sqlalchemy import event
+
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
         poolclass=NullPool,
         echo=False
     )
 
+    # SQLite doesn't support ENUMs, so we need to handle them differently
     async with engine.begin() as conn:
+        # Create tables without ENUM constraints for SQLite
+        def _fk_pragma_on_connect(dbapi_con, con_record):
+            dbapi_con.execute('pragma foreign_keys=ON')
+
         await conn.run_sync(Base.metadata.create_all)
 
     yield engine
