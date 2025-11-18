@@ -1,4 +1,5 @@
 """Input validation utilities"""
+
 from typing import Optional
 
 
@@ -26,9 +27,7 @@ def validate_name(name: str, min_length: int = 2, max_length: int = 50) -> str:
     name = name.strip()
 
     if len(name) < min_length or len(name) > max_length:
-        raise ValidationError(
-            f"Name must be between {min_length} and {max_length} characters"
-        )
+        raise ValidationError(f"Name must be between {min_length} and {max_length} characters")
 
     return name
 

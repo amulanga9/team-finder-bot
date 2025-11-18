@@ -1,4 +1,5 @@
 """Base handler utilities"""
+
 import logging
 from functools import wraps
 from typing import Callable
@@ -36,9 +37,7 @@ def handle_errors(handler: Callable):
             message_obj = None
             for arg in args:
                 if isinstance(arg, (Message, CallbackQuery)):
-                    message_obj = (
-                        arg if isinstance(arg, Message) else arg.message
-                    )
+                    message_obj = arg if isinstance(arg, Message) else arg.message
                     break
 
             if message_obj:
@@ -51,9 +50,7 @@ def handle_errors(handler: Callable):
     return wrapper
 
 
-async def safe_answer(
-    message: Message, text: str, show_alert: bool = False, **kwargs
-) -> None:
+async def safe_answer(message: Message, text: str, show_alert: bool = False, **kwargs) -> None:
     """
     Safely send message with error handling
 

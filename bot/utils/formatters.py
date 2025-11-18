@@ -1,8 +1,9 @@
 """Text formatting utilities"""
-from typing import List, Optional
+
+from typing import List
 from datetime import datetime, timedelta
 
-from bot.database.models import User, Team, Invitation, UserType, InvitationStatus
+from bot.database.models import User, Team, Invitation
 
 
 def format_skills(skills: List[str], separator: str = ", ") -> str:
