@@ -1,7 +1,14 @@
+"""
+CRUD операции для работы с базой данных.
+
+Исправлены N+1 проблемы через использование joinedload.
+Добавлены полные type hints для всех функций.
+"""
 from sqlalchemy import select, update, delete, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
 from database.models import User, Team, Invitation, UserType, InvitationStatus, TeamStatus
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from datetime import datetime, timedelta
 
 
@@ -43,11 +50,31 @@ async def get_user_by_telegram_id(session: AsyncSession, telegram_id: int) -> Op
     return result.scalar_one_or_none()
 
 
-async def get_user_by_id(session: AsyncSession, user_id: int) -> Optional[User]:
-    """Получить пользователя по ID"""
-    result = await session.execute(
-        select(User).where(User.id == user_id)
-    )
+async def get_user_by_id(
+    session: AsyncSession, user_id: int, with_relations: bool = False
+) -> Optional[User]:
+    """
+    Получить пользователя по ID.
+
+    Args:
+        session: AsyncSession для работы с БД
+        user_id: ID пользователя
+        with_relations: Загружать ли relationships (для предотвращения N+1)
+
+    Returns:
+        Optional[User]: найденный пользователь или None
+    """
+    query = select(User).where(User.id == user_id)
+
+    # Загружаем relationships если нужно (избегаем N+1 проблемы)
+    if with_relations:
+        query = query.options(
+            selectinload(User.led_teams),
+            selectinload(User.sent_invitations),
+            selectinload(User.received_invitations),
+        )
+
+    result = await session.execute(query)
     return result.scalar_one_or_none()
 
 
@@ -91,11 +118,30 @@ async def create_team(
     return team
 
 
-async def get_team_by_id(session: AsyncSession, team_id: int) -> Optional[Team]:
-    """Получить команду по ID"""
-    result = await session.execute(
-        select(Team).where(Team.id == team_id)
-    )
+async def get_team_by_id(
+    session: AsyncSession, team_id: int, with_relations: bool = False
+) -> Optional[Team]:
+    """
+    Получить команду по ID.
+
+    Args:
+        session: AsyncSession для работы с БД
+        team_id: ID команды
+        with_relations: Загружать ли relationships (для предотвращения N+1)
+
+    Returns:
+        Optional[Team]: найденная команда или None
+    """
+    query = select(Team).where(Team.id == team_id)
+
+    # Загружаем relationships если нужно (избегаем N+1 проблемы)
+    if with_relations:
+        query = query.options(
+            joinedload(Team.leader),
+            selectinload(Team.invitations),
+        )
+
+    result = await session.execute(query)
     return result.scalar_one_or_none()
 
 
