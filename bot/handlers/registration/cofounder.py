@@ -140,7 +140,7 @@ async def finish_cofounder_registration(message: Message, user_data, state: FSMC
 
     try:
         # Сохраняем через общую функцию
-        user, total_users = await save_user_and_check_cold_start(
+        user, total_users, is_new_user = await save_user_and_check_cold_start(
             telegram_id=user_data.id,
             username=user_data.username,
             name=name,
@@ -151,9 +151,13 @@ async def finish_cofounder_registration(message: Message, user_data, state: FSMC
         )
 
         # Формируем сообщение
-        final_message = COFOUNDER_REGISTRATION_COMPLETE.format(name=name)
+        if is_new_user:
+            final_message = COFOUNDER_REGISTRATION_COMPLETE.format(name=name)
+        else:
+            final_message = f"✅ <b>{name}</b>, ваш профиль со-фаундера обновлен!"
+
         if total_users < COLD_START_THRESHOLD:
-            final_message += COLD_START_MESSAGE
+            final_message += "\n\n" + COLD_START_MESSAGE
 
         await message.answer(
             final_message,

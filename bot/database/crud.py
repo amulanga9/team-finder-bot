@@ -42,6 +42,54 @@ async def create_user(
     return user
 
 
+async def update_user(
+    session: AsyncSession,
+    telegram_id: int,
+    name: Optional[str] = None,
+    user_type: Optional[UserType] = None,
+    username: Optional[str] = None,
+    primary_skill: Optional[str] = None,
+    additional_skills: Optional[str] = None,
+    idea_what: Optional[str] = None,
+    idea_who: Optional[str] = None,
+) -> Optional[User]:
+    """
+    Обновить данные пользователя.
+
+    Args:
+        session: AsyncSession для работы с БД
+        telegram_id: Telegram ID пользователя
+        name, user_type, username, etc: Поля для обновления (None = не обновлять)
+
+    Returns:
+        Optional[User]: обновленный пользователь или None если не найден
+    """
+    user = await get_user_by_telegram_id(session, telegram_id)
+    if not user:
+        return None
+
+    # Обновляем только переданные поля
+    if name is not None:
+        user.name = name
+    if user_type is not None:
+        user.user_type = user_type
+    if username is not None:
+        user.username = username
+    if primary_skill is not None:
+        user.primary_skill = primary_skill
+    if additional_skills is not None:
+        user.additional_skills = additional_skills
+    if idea_what is not None:
+        user.idea_what = idea_what
+    if idea_who is not None:
+        user.idea_who = idea_who
+
+    user.updated_at = datetime.utcnow()
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
 async def get_user_by_telegram_id(session: AsyncSession, telegram_id: int) -> Optional[User]:
     """Получить пользователя по telegram_id"""
     result = await session.execute(

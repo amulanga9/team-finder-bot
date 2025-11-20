@@ -102,7 +102,7 @@ async def finish_seeker_registration(callback: CallbackQuery, state: FSMContext)
 
     try:
         # Сохраняем через общую функцию
-        user, total_users = await save_user_and_check_cold_start(
+        user, total_users, is_new_user = await save_user_and_check_cold_start(
             telegram_id=callback.from_user.id,
             username=callback.from_user.username,
             name=name,
@@ -123,7 +123,12 @@ async def finish_seeker_registration(callback: CallbackQuery, state: FSMContext)
         )
 
         await clear_state_safe(state)
-        await callback.answer("✅ Профиль успешно создан!")
+
+        # Показываем правильное сообщение
+        if is_new_user:
+            await callback.answer("✅ Профиль успешно создан!")
+        else:
+            await callback.answer("✅ Профиль успешно обновлен!")
 
     except Exception as e:
         log_registration_error("SEEKER", e)

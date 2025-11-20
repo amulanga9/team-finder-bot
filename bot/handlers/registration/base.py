@@ -29,12 +29,12 @@ async def save_user_and_check_cold_start(
     additional_skills: Optional[str] = None,
     idea_what: Optional[str] = None,
     idea_who: Optional[str] = None,
-) -> tuple[object, int]:
+) -> tuple[object, int, bool]:
     """
     Сохранить пользователя в БД и проверить холодный старт.
 
     Returns:
-        tuple: (user, total_users)
+        tuple: (user, total_users, is_new_user)
 
     Raises:
         Exception: При ошибке сохранения в БД
@@ -43,25 +43,46 @@ async def save_user_and_check_cold_start(
     logger.info(f"[{user_type_name.upper()}] Начало сохранения пользователя {telegram_id}")
 
     async with get_db() as session:
-        # Создаем пользователя
-        user = await crud.create_user(
-            session=session,
-            telegram_id=telegram_id,
-            username=username,
-            name=name,
-            user_type=user_type,
-            primary_skill=primary_skill,
-            additional_skills=additional_skills,
-            idea_what=idea_what,
-            idea_who=idea_who,
-        )
-        logger.info(f"[{user_type_name.upper()}] ✅ Пользователь создан: {user.id} ({user.name})")
+        # Проверяем, существует ли пользователь
+        existing_user = await crud.get_user_by_telegram_id(session, telegram_id)
+        is_new_user = existing_user is None
+
+        if existing_user:
+            # Обновляем существующего пользователя
+            logger.info(f"[{user_type_name.upper()}] Пользователь уже существует, обновляем данные")
+            user = await crud.update_user(
+                session=session,
+                telegram_id=telegram_id,
+                username=username,
+                name=name,
+                user_type=user_type,
+                primary_skill=primary_skill,
+                additional_skills=additional_skills,
+                idea_what=idea_what,
+                idea_who=idea_who,
+            )
+            logger.info(f"[{user_type_name.upper()}] ✅ Профиль обновлен: {user.id} ({user.name})")
+        else:
+            # Создаем нового пользователя
+            logger.info(f"[{user_type_name.upper()}] Создаем нового пользователя")
+            user = await crud.create_user(
+                session=session,
+                telegram_id=telegram_id,
+                username=username,
+                name=name,
+                user_type=user_type,
+                primary_skill=primary_skill,
+                additional_skills=additional_skills,
+                idea_what=idea_what,
+                idea_who=idea_who,
+            )
+            logger.info(f"[{user_type_name.upper()}] ✅ Пользователь создан: {user.id} ({user.name})")
 
         # Проверяем холодный старт
         total_users = await crud.count_users(session)
         logger.info(f"[{user_type_name.upper()}] Всего пользователей: {total_users}")
 
-    return user, total_users
+    return user, total_users, is_new_user
 
 
 async def save_team_and_check_cold_start(
