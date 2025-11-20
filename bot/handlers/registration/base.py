@@ -10,7 +10,7 @@ from typing import Optional
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.db import AsyncSessionLocal
+from database.db import get_db
 from database.models import UserType
 from database import crud
 
@@ -42,7 +42,7 @@ async def save_user_and_check_cold_start(
     user_type_name = user_type.value if hasattr(user_type, 'value') else str(user_type)
     logger.info(f"[{user_type_name.upper()}] Начало сохранения пользователя {telegram_id}")
 
-    async with AsyncSessionLocal() as session:
+    async with get_db() as session:
         # Создаем пользователя
         user = await crud.create_user(
             session=session,
@@ -83,7 +83,7 @@ async def save_team_and_check_cold_start(
     """
     logger.info(f"[TEAM] Начало регистрации команды '{team_name}' от пользователя {telegram_id}")
 
-    async with AsyncSessionLocal() as session:
+    async with get_db() as session:
         # Проверяем, существует ли пользователь
         user = await crud.get_user_by_telegram_id(session, telegram_id)
 
