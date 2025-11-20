@@ -13,10 +13,10 @@ Services Layer - 187=5A-;>38:0 ?@8;>65=8O.
         user_service = UserService(session)
         user = await user_service.get_user_by_telegram_id(telegram_id)
 """
-from services.user_service import UserService
-from services.team_service import TeamService
-from services.invitation_service import InvitationService
-from services.search_service import SearchService
+from .user_service import UserService
+from .team_service import TeamService
+from .invitation_service import InvitationService
+from .search_service import SearchService
 
 __all__ = [
     "UserService",
