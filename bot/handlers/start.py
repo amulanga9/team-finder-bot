@@ -341,6 +341,10 @@ async def finish_cofounder_registration(message: Message, user_data, state: FSMC
     idea_who = data.get("idea_who")
 
     try:
+        # DEBUG: Проверяем импорты
+        logger.info(f"[COFOUNDER] crud module: {crud}")
+        logger.info(f"[COFOUNDER] type(crud): {type(crud)}")
+
         # Сохраняем в БД
         async with AsyncSessionLocal() as session:
             # Создаем пользователя
@@ -375,7 +379,9 @@ async def finish_cofounder_registration(message: Message, user_data, state: FSMC
         await state.clear()
 
     except Exception as e:
-        logger.error(f"Ошибка при сохранении со-фаундера: {e}")
+        import traceback
+        logger.error(f"❌ Ошибка при сохранении со-фаундера: {e}")
+        logger.error(f"❌ Полный traceback:\n{traceback.format_exc()}")
         await message.answer("❌ Произошла ошибка. Попробуйте еще раз.")
 
 
@@ -459,6 +465,13 @@ async def finish_seeker_skills_selection(callback: CallbackQuery, state: FSMCont
     additional_skills = format_selected_skills(selected_skills[1:]) if len(selected_skills) > 1 else None
 
     try:
+        # DEBUG: Проверяем импорты
+        logger.info(f"[SEEKER] crud module: {crud}")
+        logger.info(f"[SEEKER] type(crud): {type(crud)}")
+        if crud:
+            logger.info(f"[SEEKER] crud.create_user exists: {hasattr(crud, 'create_user')}")
+            logger.info(f"[SEEKER] crud.create_user: {getattr(crud, 'create_user', 'NOT FOUND')}")
+
         # Сохраняем в БД
         async with AsyncSessionLocal() as session:
             # Создаем пользователя
@@ -493,7 +506,9 @@ async def finish_seeker_skills_selection(callback: CallbackQuery, state: FSMCont
         await callback.answer("✅ Профиль успешно создан!")
 
     except Exception as e:
-        logger.error(f"Ошибка при сохранении соискателя: {e}")
+        import traceback
+        logger.error(f"❌ Ошибка при сохранении соискателя: {e}")
+        logger.error(f"❌ Полный traceback:\n{traceback.format_exc()}")
         await callback.answer("❌ Произошла ошибка. Попробуйте еще раз.", show_alert=True)
 
 
