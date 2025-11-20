@@ -10,6 +10,9 @@ from database.db import init_db, close_db, create_tables
 from middlewares import ThrottlingMiddleware
 from tasks import start_background_tasks, stop_background_tasks
 from handlers.start import router as start_router
+from handlers.registration import team_router as registration_team_router
+from handlers.registration import cofounder_router as registration_cofounder_router
+from handlers.registration import seeker_router as registration_seeker_router
 from handlers.search import router as search_router
 from handlers.invitations import router as invitations_router
 from handlers.profile import router as profile_router
@@ -85,12 +88,17 @@ class BotApplication:
 
         # 5. Регистрация роутеров (handlers)
         logger.info("Регистрация обработчиков...")
-        self.dp.include_router(commands_router)  # /help, /cancel первыми
-        self.dp.include_router(start_router)
+        self.dp.include_router(commands_router)            # /help, /cancel первыми
+        self.dp.include_router(start_router)               # Команда /start
+        # Роутеры регистрации (разделены по типам для чистоты кода)
+        self.dp.include_router(registration_team_router)      # Регистрация команды
+        self.dp.include_router(registration_cofounder_router) # Регистрация со-фаундера
+        self.dp.include_router(registration_seeker_router)    # Регистрация соискателя
+        # Остальные функции
         self.dp.include_router(search_router)
         self.dp.include_router(invitations_router)
         self.dp.include_router(profile_router)
-        self.dp.include_router(team_router)
+        self.dp.include_router(team_router)                # Управление командой
 
         # 6. Запуск фоновых задач
         logger.info("Запуск фоновых задач очистки...")
