@@ -1,7 +1,7 @@
 """Модуль работы с базой данных"""
 from database.models import User, Team, Invitation, UserType, InvitationStatus, TeamStatus
 from database.db import create_tables, drop_tables, get_db
-from database import crud  # ВАЖНО: импортируем crud модуль!
+from . import crud  # Относительный импорт crud модуля
 
 __all__ = [
     "User",
